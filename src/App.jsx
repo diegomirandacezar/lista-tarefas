@@ -1,19 +1,24 @@
 import React, { useState } from 'react';
+import { AuthProvider, useAuth } from './contexts/AuthContext';
+import { AuthView } from './components/auth/AuthView';
+import { ProfileModal } from './components/profile/ProfileModal';
 import { Navbar } from './components/layout/Navbar';
 import { TaskList } from './components/tasks/TaskList';
 import { AnalyticsView } from './components/analytics/AnalyticsView';
 import { CalendarView } from './components/calendar/CalendarView';
 import { useTasks } from './hooks/useTasks';
 import { taskService } from './services/taskService';
-import { Database, CheckCircle2, ShieldCheck, Cloud } from 'lucide-react';
+import { Database, CheckCircle2, Cloud, Sparkles } from 'lucide-react';
 
-export default function App() {
+function MainApp() {
+  const { user, loading: authLoading, isPasswordRecovery, setIsPasswordRecovery } = useAuth();
   const [activeTab, setActiveTab] = useState('tasks'); // 'tasks' | 'analytics' | 'calendar'
   const [notification, setNotification] = useState(null);
+  const [isProfileOpen, setIsProfileOpen] = useState(false);
 
   const {
     tasks,
-    loading,
+    loading: tasksLoading,
     statusFilter,
     setStatusFilter,
     categoryFilter,
@@ -29,7 +34,7 @@ export default function App() {
     toggleTask,
     removeTask,
     resetToDefaults
-  } = useTasks();
+  } = useTasks(user?.id);
 
   const showNotification = (message, type = 'success') => {
     setNotification({ message, type });
@@ -64,9 +69,38 @@ export default function App() {
 
   const handleResetTasks = async () => {
     await resetToDefaults();
-    showNotification('Exemplos de demonstração restaurados.');
+    showNotification('Tarefas de exemplo restauradas.');
   };
 
+  // 1. Tela de Carregamento Inicial de Sessão
+  if (authLoading) {
+    return (
+      <div className="min-h-screen bg-slate-900 flex flex-col items-center justify-center p-4">
+        <div className="w-16 h-16 rounded-2xl bg-indigo-600 flex items-center justify-center text-white shadow-xl shadow-indigo-500/25 animate-pulse mb-4">
+          <Sparkles className="w-8 h-8" />
+        </div>
+        <div className="w-8 h-8 border-3 border-indigo-500 border-t-transparent rounded-full animate-spin" />
+        <p className="mt-4 text-sm font-semibold text-slate-300">Carregando TaskFlow Pro...</p>
+      </div>
+    );
+  }
+
+  // 2. Tela de Redefinição de Senha (se o usuário chegou via link de recuperação do Supabase)
+  if (isPasswordRecovery) {
+    return (
+      <AuthView 
+        isRecoveryMode={true} 
+        onExitRecovery={() => setIsPasswordRecovery(false)} 
+      />
+    );
+  }
+
+  // 3. Tela de Login / Cadastro / Recuperação (se não autenticado)
+  if (!user) {
+    return <AuthView />;
+  }
+
+  // 4. Aplicação Principal (Usuário Autenticado com Perfil e Tarefas)
   return (
     <div className="min-h-screen flex flex-col bg-slate-50 text-slate-900">
       
@@ -75,6 +109,14 @@ export default function App() {
         activeTab={activeTab}
         setActiveTab={setActiveTab}
         taskCount={stats.pending}
+        onOpenProfile={() => setIsProfileOpen(true)}
+      />
+
+      {/* Modal de Perfil do Usuário */}
+      <ProfileModal
+        isOpen={isProfileOpen}
+        onClose={() => setIsProfileOpen(false)}
+        stats={stats}
       />
 
       {/* Notificação Toast Flutuante */}
@@ -89,10 +131,10 @@ export default function App() {
 
       {/* Conteúdo Central Responsivo */}
       <main className="flex-1 max-w-6xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
-        {loading ? (
+        {tasksLoading ? (
           <div className="flex flex-col items-center justify-center py-24">
             <div className="w-8 h-8 border-3 border-indigo-600 border-t-transparent rounded-full animate-spin" />
-            <span className="mt-3 text-sm text-slate-500 font-medium">Carregando tarefas...</span>
+            <span className="mt-3 text-sm text-slate-500 font-medium">Carregando suas tarefas...</span>
           </div>
         ) : (
           <>
@@ -145,7 +187,7 @@ export default function App() {
             <div className="flex items-center gap-1.5 text-emerald-700 font-semibold bg-emerald-50/90 px-3 py-1.5 rounded-full border border-emerald-200">
               <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
               <Cloud className="w-3.5 h-3.5 text-emerald-600" />
-              <span>Conectado: Supabase (lista-tarefas)</span>
+              <span>Conectado: Supabase (lista-tarefas) • RLS Ativo por Usuário</span>
             </div>
           ) : (
             <div className="flex items-center gap-1.5 text-indigo-700 font-semibold bg-indigo-50/80 px-3 py-1.5 rounded-full border border-indigo-100">
@@ -156,5 +198,13 @@ export default function App() {
         </div>
       </footer>
     </div>
+  );
+}
+
+export default function App() {
+  return (
+    <AuthProvider>
+      <MainApp />
+    </AuthProvider>
   );
 }

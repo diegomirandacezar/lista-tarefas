@@ -1,8 +1,20 @@
 import React, { useState } from 'react';
-import { CheckSquare, BarChart3, Calendar, LogOut, Menu, X, Sparkles } from 'lucide-react';
+import { 
+  CheckSquare, 
+  BarChart3, 
+  Calendar, 
+  LogOut, 
+  Menu, 
+  X, 
+  User, 
+  ChevronDown, 
+  ShieldCheck 
+} from 'lucide-react';
 import { ConfirmModal } from '../common/ConfirmModal';
+import { useAuth } from '../../contexts/AuthContext';
 
-export function Navbar({ activeTab, setActiveTab, taskCount }) {
+export function Navbar({ activeTab, setActiveTab, taskCount, onOpenProfile }) {
+  const { user, profile, signOut } = useAuth();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [showLogoutModal, setShowLogoutModal] = useState(false);
 
@@ -12,9 +24,22 @@ export function Navbar({ activeTab, setActiveTab, taskCount }) {
     { id: 'calendar', label: 'Calendário', icon: Calendar },
   ];
 
-  const handleLogout = () => {
-    // Ação de simulação de logout
-    alert('Sessão encerrada com sucesso! Até logo.');
+  const handleLogout = async () => {
+    setShowLogoutModal(false);
+    await signOut();
+  };
+
+  const displayName = profile?.full_name || user?.user_metadata?.full_name || 'Usuário';
+  const displayEmail = profile?.email || user?.email || '';
+
+  const getInitials = (name, email) => {
+    if (name) {
+      const parts = name.trim().split(' ');
+      if (parts.length >= 2) return `${parts[0][0]}${parts[parts.length - 1][0]}`.toUpperCase();
+      return name.substring(0, 2).toUpperCase();
+    }
+    if (email) return email.substring(0, 2).toUpperCase();
+    return 'US';
   };
 
   return (
@@ -68,11 +93,32 @@ export function Navbar({ activeTab, setActiveTab, taskCount }) {
               })}
             </nav>
 
-            {/* Botão de Sair (Desktop) */}
+            {/* Ações do Usuário e Perfil (Desktop) */}
             <div className="hidden md:flex items-center gap-3">
+              {/* Botão de Perfil */}
+              <button
+                onClick={onOpenProfile}
+                className="flex items-center gap-2.5 px-3 py-1.5 rounded-xl bg-slate-50 hover:bg-indigo-50/80 border border-slate-200 hover:border-indigo-200 transition-all text-left cursor-pointer group"
+                title="Abrir meu perfil"
+              >
+                <div className="w-8 h-8 rounded-lg bg-gradient-to-tr from-indigo-600 to-indigo-500 text-white font-bold text-xs flex items-center justify-center shadow-xs">
+                  {getInitials(displayName, displayEmail)}
+                </div>
+                <div className="max-w-[140px]">
+                  <span className="text-xs font-bold text-slate-800 block truncate group-hover:text-indigo-700">
+                    {displayName}
+                  </span>
+                  <span className="text-[10px] text-slate-500 block truncate">
+                    {displayEmail}
+                  </span>
+                </div>
+                <ChevronDown className="w-3.5 h-3.5 text-slate-400 group-hover:text-indigo-600" />
+              </button>
+
+              {/* Botão de Sair */}
               <button
                 onClick={() => setShowLogoutModal(true)}
-                className="flex items-center gap-2 px-3.5 py-2 text-sm font-semibold text-slate-600 hover:text-rose-600 hover:bg-rose-50/80 rounded-xl transition-all border border-transparent hover:border-rose-200 cursor-pointer"
+                className="flex items-center gap-1.5 px-3 py-2 text-sm font-semibold text-slate-600 hover:text-rose-600 hover:bg-rose-50/80 rounded-xl transition-all border border-transparent hover:border-rose-200 cursor-pointer"
                 title="Sair da aplicação"
               >
                 <LogOut className="w-4 h-4" />
@@ -95,45 +141,68 @@ export function Navbar({ activeTab, setActiveTab, taskCount }) {
 
         {/* Menu Suspenso Mobile */}
         {mobileMenuOpen && (
-          <div className="md:hidden border-t border-slate-200 bg-white px-4 pt-2 pb-4 space-y-1 shadow-lg animate-in slide-in-from-top duration-200">
-            {navItems.map((item) => {
-              const Icon = item.icon;
-              const isActive = activeTab === item.id;
-              return (
-                <button
-                  key={item.id}
-                  onClick={() => {
-                    setActiveTab(item.id);
-                    setMobileMenuOpen(false);
-                  }}
-                  className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-sm font-semibold transition-colors ${
-                    isActive
-                      ? 'bg-indigo-50 text-indigo-700 font-bold'
-                      : 'text-slate-600 hover:bg-slate-50'
-                  }`}
-                >
-                  <div className="flex items-center gap-3">
-                    <Icon className="w-5 h-5 text-indigo-600" />
-                    <span>{item.label}</span>
-                  </div>
-                  {typeof item.badge === 'number' && item.badge > 0 && (
-                    <span className="text-xs bg-indigo-100 text-indigo-700 px-2 py-0.5 rounded-full font-bold">
-                      {item.badge}
-                    </span>
-                  )}
-                </button>
-              );
-            })}
+          <div className="md:hidden border-t border-slate-200 bg-white px-4 pt-3 pb-4 space-y-2 shadow-lg animate-in slide-in-from-top duration-200">
+            
+            {/* Card de Perfil no Mobile */}
+            <button
+              onClick={() => {
+                setMobileMenuOpen(false);
+                if (onOpenProfile) onOpenProfile();
+              }}
+              className="w-full flex items-center gap-3 p-2.5 rounded-xl bg-slate-50 border border-slate-200 text-left cursor-pointer"
+            >
+              <div className="w-10 h-10 rounded-xl bg-indigo-600 text-white font-bold text-sm flex items-center justify-center flex-shrink-0">
+                {getInitials(displayName, displayEmail)}
+              </div>
+              <div className="min-w-0 flex-1">
+                <span className="text-sm font-bold text-slate-900 block truncate">{displayName}</span>
+                <span className="text-xs text-slate-500 block truncate">{displayEmail}</span>
+              </div>
+              <span className="text-xs font-bold text-indigo-600 bg-indigo-50 px-2 py-1 rounded-lg">Ver Perfil</span>
+            </button>
+
+            {/* Abas */}
+            <div className="space-y-1 pt-1">
+              {navItems.map((item) => {
+                const Icon = item.icon;
+                const isActive = activeTab === item.id;
+                return (
+                  <button
+                    key={item.id}
+                    onClick={() => {
+                      setActiveTab(item.id);
+                      setMobileMenuOpen(false);
+                    }}
+                    className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-sm font-semibold transition-colors cursor-pointer ${
+                      isActive
+                        ? 'bg-indigo-50 text-indigo-700 font-bold'
+                        : 'text-slate-600 hover:bg-slate-50'
+                    }`}
+                  >
+                    <div className="flex items-center gap-3">
+                      <Icon className="w-5 h-5 text-indigo-600" />
+                      <span>{item.label}</span>
+                    </div>
+                    {typeof item.badge === 'number' && item.badge > 0 && (
+                      <span className="text-xs bg-indigo-100 text-indigo-700 px-2 py-0.5 rounded-full font-bold">
+                        {item.badge}
+                      </span>
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+
             <div className="pt-2 border-t border-slate-100 mt-2">
               <button
                 onClick={() => {
                   setMobileMenuOpen(false);
                   setShowLogoutModal(true);
                 }}
-                className="w-full flex items-center gap-3 px-3.5 py-2.5 text-sm font-semibold text-rose-600 hover:bg-rose-50 rounded-xl transition-colors"
+                className="w-full flex items-center gap-3 px-3.5 py-2.5 text-sm font-semibold text-rose-600 hover:bg-rose-50 rounded-xl transition-colors cursor-pointer"
               >
                 <LogOut className="w-5 h-5" />
-                <span>Sair</span>
+                <span>Encerrar Sessão</span>
               </button>
             </div>
           </div>
@@ -144,7 +213,7 @@ export function Navbar({ activeTab, setActiveTab, taskCount }) {
       <ConfirmModal
         isOpen={showLogoutModal}
         title="Deseja realmente sair?"
-        message="Suas tarefas salvas no navegador permanecerão intactas para quando você retornar."
+        message="Sua sessão será encerrada com segurança no Supabase. Você poderá retornar a qualquer momento com seu email e senha."
         confirmText="Confirmar Saída"
         cancelText="Voltar"
         isDestructive={false}

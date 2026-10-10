@@ -11,10 +11,10 @@ const activeStorage = USE_SUPABASE ? supabaseService : localStorageService;
 export const taskService = {
   isSupabase: USE_SUPABASE,
   storageName: USE_SUPABASE ? 'Supabase (Nuvem)' : 'LocalStorage (Navegador)',
-  getTasks: () => activeStorage.getTasks(),
-  createTask: (taskData) => activeStorage.createTask(taskData),
+  getTasks: (userId) => activeStorage.getTasks(userId),
+  createTask: (taskData, userId) => activeStorage.createTask(taskData, userId),
   updateTask: (id, updates) => activeStorage.updateTask(id, updates),
   deleteTask: (id) => activeStorage.deleteTask(id),
   toggleComplete: (id) => activeStorage.toggleComplete(id),
-  resetDefaults: () => activeStorage.resetDefaults()
+  resetDefaults: (userId) => activeStorage.resetDefaults(userId)
 };

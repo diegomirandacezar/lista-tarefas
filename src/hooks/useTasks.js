@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { taskService } from '../services/taskService';
 
-export function useTasks() {
+export function useTasks(userId = null) {
   const [tasks, setTasks] = useState([]);
   const [loading, setLoading] = useState(true);
   const [statusFilter, setStatusFilter] = useState('todas'); // 'todas' | 'pendentes' | 'concluidas'
@@ -9,26 +9,32 @@ export function useTasks() {
   const [priorityFilter, setPriorityFilter] = useState('todas');
   const [searchQuery, setSearchQuery] = useState('');
 
-  // Carregar tarefas iniciais
+  // Carregar tarefas pertencentes ao usuário logado
   const loadTasks = useCallback(async () => {
+    if (taskService.isSupabase && !userId) {
+      setTasks([]);
+      setLoading(false);
+      return;
+    }
+
     try {
       setLoading(true);
-      const data = await taskService.getTasks();
+      const data = await taskService.getTasks(userId);
       setTasks(data || []);
     } catch (err) {
       console.error('Falha ao carregar tarefas:', err);
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [userId]);
 
   useEffect(() => {
     loadTasks();
   }, [loadTasks]);
 
-  // Criar tarefa
+  // Criar tarefa vinculada ao usuário
   const addTask = async (taskData) => {
-    const created = await taskService.createTask(taskData);
+    const created = await taskService.createTask(taskData, userId);
     setTasks((prev) => [created, ...prev]);
     return created;
   };
@@ -53,9 +59,9 @@ export function useTasks() {
     setTasks((prev) => prev.filter((t) => t.id !== id));
   };
 
-  // Restaurar dados padrão para demonstração
+  // Restaurar dados padrão para o usuário logado
   const resetToDefaults = async () => {
-    const defaults = await taskService.resetDefaults();
+    const defaults = await taskService.resetDefaults(userId);
     setTasks(defaults);
   };
 
@@ -84,7 +90,7 @@ export function useTasks() {
     });
   }, [tasks, statusFilter, categoryFilter, priorityFilter, searchQuery]);
 
-  // Métricas e estatísticas para a aba Análises
+  // Métricas e estatísticas para a aba Análises e Perfil
   const stats = useMemo(() => {
     const total = tasks.length;
     const completed = tasks.filter((t) => t.completed).length;
@@ -128,6 +134,7 @@ export function useTasks() {
     editTask,
     toggleTask,
     removeTask,
-    resetToDefaults
+    resetToDefaults,
+    refreshTasks: loadTasks
   };
 }

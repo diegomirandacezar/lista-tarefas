@@ -1,24 +1,45 @@
-# TaskFlow - Gestão Inteligente de Tarefas
+# TaskFlow - Gestão Inteligente de Tarefas com Supabase Auth
 
-Aplicativo web moderno, responsivo e de alta performance para gerenciamento e acompanhamento de tarefas diárias, com suporte a persistência local (LocalStorage) e integração em tempo real com **Supabase**.
+Aplicativo web moderno, responsivo e de alta performance para gerenciamento e acompanhamento de tarefas diárias, com **sistema de autenticação integrado ao Supabase**, suporte a **múltiplos usuários com perfis exclusivos**, isolamento de tarefas via **Row Level Security (RLS)** e persistência em nuvem.
 
 ---
 
 ## 🚀 Principais Funcionalidades
 
+### 🔐 Autenticação e Perfis (Supabase Auth)
+- **Login com Email e Senha:** Acesso seguro com validação e mensagens amigáveis em português.
+- **Criação de Conta (Cadastro):** Registro com nome completo, email e senha segura (mínimo de 6 caracteres).
+- **Recuperação de Senha:** Envio de email com link seguro de recuperação e redefinição de nova senha.
+- **Multiusuário com RLS:** Cada usuário autenticado possui seu próprio conjunto de tarefas no banco PostgreSQL, protegido no nível de banco de dados pelo Row Level Security.
+- **Perfil do Usuário:**
+  - Painel com iniciais estilizadas, nome de exibição editável, email e data de cadastro.
+  - Indicadores e métricas de produtividade exclusivas do usuário logado.
+  - Alteração direta de senha pelo perfil.
+  - Logout seguro que encerra a sessão no Supabase.
+- **Atalho de Teste Rápido:** Botão no formulário de login para preencher instantaneamente as credenciais do primeiro usuário já cadastrado.
+
+### 📋 Gestão de Tarefas
 - **CRUD Completo:** Criação, edição, visualização, conclusão e exclusão de tarefas com diálogo de confirmação.
-- **Categorização Visual:** Categorias temáticas (*Trabalho*, *Pessoal*, *Estudos* e *Saúde*) com identidade visual dedicada.
+- **Categorização Visual:** Categorias temáticas (*Trabalho*, *Pessoal*, *Estudos* e *Saúde*).
 - **Gestão de Prioridades:** Níveis *Alta*, *Média* e *Baixa* com marcadores cromáticos.
 - **Controle de Prazos:** Acompanhamento de datas de vencimento com alertas visuais para tarefas atrasadas, para hoje ou futuras.
 - **Filtros e Busca Instantânea:**
   - Filtragem por status: *Todas*, *Pendentes* e *Concluídas*.
   - Busca textual em tempo real por título e descrição.
   - Filtro por categoria e prioridade.
-- **Métricas e Produtividade (Aba Análises):** Dashboard com taxa de conclusão e gráficos de distribuição por categoria e nível de prioridade.
-- **Visão em Calendário:** Visualização mensal dinâmica para acompanhamento de tarefas por dia.
-- **Persistência Híbrida / Desacoplada:**
-  - **Supabase:** Armazenamento em banco de dados relacional PostgreSQL em nuvem.
-  - **LocalStorage:** Fallback automático transparente caso as credenciais da nuvem não estejam configuradas.
+- **Métricas e Produtividade (Aba Análises):** Dashboard com gráficos de distribuição e taxa de conclusão.
+- **Visão em Calendário:** Visualização mensal dinâmica para agendamentos.
+
+---
+
+## 👤 Credenciais do Primeiro Usuário Cadastrado
+
+Para teste e avaliação imediata, utilize o usuário já registrado e confirmado no Supabase:
+
+- **Email:** `diegomirandacezar@gmail.com`
+- **Senha:** `senai@2026`
+
+*(A tela de login conta com o botão **"Preencher Dados do Usuário Cadastrado"** para preenchimento com 1 clique).*
 
 ---
 
@@ -27,7 +48,8 @@ Aplicativo web moderno, responsivo e de alta performance para gerenciamento e ac
 - **React 19**
 - **Vite 8**
 - **Tailwind CSS v4**
-- **@supabase/supabase-js** (Cliente oficial do Supabase)
+- **@supabase/supabase-js** (Cliente oficial do Supabase para Auth e Database)
+- **PostgreSQL** com Row Level Security (RLS)
 - **Lucide React** (Ícones modernos)
 - **Google Fonts** (Plus Jakarta Sans & Inter)
 
@@ -40,106 +62,58 @@ Aplicativo web moderno, responsivo e de alta performance para gerenciamento e ac
 
 ---
 
-## 🔧 Instalação e Configuração
+## 🔧 Instalação e Execução
 
-1. **Clone o repositório:**
-   ```bash
-   git clone https://github.com/diegomirandacezar/lista-tarefas.git
-   cd lista-tarefas
-   ```
-
-2. **Instale as dependências:**
+1. **Instale as dependências:**
    ```bash
    npm install
    ```
 
-3. **Configure as Variáveis de Ambiente:**
-   Copie o arquivo de exemplo para criar seu `.env`:
-   ```bash
-   cp .env.example .env
-   ```
-   Preencha com os dados do seu projeto no Supabase:
+2. **Variáveis de Ambiente (`.env`):**
    ```env
-   VITE_SUPABASE_URL=https://seu-projeto.supabase.co
-   VITE_SUPABASE_ANON_KEY=sua-chave-publica-anonima
+   VITE_SUPABASE_URL=https://ktdfyoimhxjwqarklwpu.supabase.co
+   VITE_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
    ```
-   *(Nota: Se o `.env` não for preenchido, o sistema funcionará normalmente salvando dados localmente no navegador via LocalStorage).*
+
+3. **Inicie o servidor de desenvolvimento:**
+   ```bash
+   npm run dev
+   ```
+   Acesse no navegador: `http://localhost:5173/`.
+
+4. **Build de produção:**
+   ```bash
+   npm run build
+   ```
 
 ---
 
-## 💻 Execução do Projeto
+## 🗄️ Arquitetura do Banco de Dados no Supabase
 
-### Modo de Desenvolvimento
-Inicie o servidor de desenvolvimento Vite:
-```bash
-npm run dev
-```
-Acesse a aplicação no navegador em: `http://localhost:5173/`.
-
-### Geração de Build de Produção
-Para compilar os arquivos otimizados para produção:
-```bash
-npm run build
-```
-Os artefatos compilados serão gerados na pasta `dist/`.
-
-### Visualização do Build de Produção (Preview)
-Para visualizar o build localmente antes da publicação:
-```bash
-npm run preview
-```
-
----
-
-## 📁 Estrutura do Projeto
-
-```text
-├── .docs/                    # Documentação e especificações do projeto
-├── src/
-│   ├── components/           # Componentes modulares da interface
-│   │   ├── analytics/        # Gráficos e métricas de desempenho
-│   │   ├── calendar/         # Visão de calendário e agendamentos
-│   │   ├── common/           # Componentes reutilizáveis (Badge, Modal, etc.)
-│   │   ├── layout/           # Barra de navegação e cabeçalhos
-│   │   └── tasks/            # Listagem, cards, filtros e modais de tarefas
-│   ├── constants/            # Cores, categorias e tarefas padrão
-│   ├── hooks/                # Hook customizado useTasks
-│   ├── services/             # Camada de abstração de dados (Supabase & LocalStorage)
-│   ├── App.jsx               # Componente raiz da aplicação
-│   ├── main.jsx              # Ponto de entrada React
-│   └── index.css             # Folha de estilos global e Tailwind CSS
-├── .env.example              # Modelo de variáveis de ambiente
-├── .gitignore                # Regras de exclusão do controle de versão
-├── index.html                # Documento HTML principal
-├── package.json              # Manifesto do projeto e dependências
-└── vite.config.js            # Configurações do empacotador Vite
-```
-
----
-
-## 🗄️ Estrutura da Tabela no Banco de Dados (Supabase)
-
-Caso deseje criar a tabela manualmente em uma nova instância do Supabase:
-
+### 1. Tabela `public.profiles`
+Armazena os perfis de cada usuário, preenchidos automaticamente via gatilho na tabela `auth.users`:
 ```sql
-create table if not exists public.tasks (
-  id uuid default gen_random_uuid() primary key,
-  title text not null,
-  description text default '',
-  category text not null,
-  priority text not null,
-  due_date date not null,
-  completed boolean default false not null,
-  created_at timestamp with time zone default timezone('utc'::text, now()) not null,
-  updated_at timestamp with time zone default timezone('utc'::text, now())
+CREATE TABLE IF NOT EXISTS public.profiles (
+  id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
+  email TEXT,
+  full_name TEXT,
+  avatar_url TEXT,
+  created_at TIMESTAMPTZ DEFAULT timezone('utc'::text, now()),
+  updated_at TIMESTAMPTZ DEFAULT timezone('utc'::text, now())
 );
 
--- Ativar Row Level Security (RLS)
-alter table public.tasks enable row level security;
-
--- Políticas de acesso público para demonstração
-create policy "Permitir leitura pública de tarefas" on public.tasks for select to public using (true);
-create policy "Permitir inserção pública de tarefas" on public.tasks for insert to public with check (true);
-create policy "Permitir atualização pública de tarefas" on public.tasks for update to public using (true) with check (true);
-create policy "Permitir exclusão pública de tarefas" on public.tasks for delete to public using (true);
+ALTER TABLE public.profiles ENABLE ROW LEVEL SECURITY;
 ```
+
+### 2. Tabela `public.tasks` com RLS por Usuário
+Cada tarefa possui uma chave estrangeira `user_id` vinculada a `auth.users(id)`:
+```sql
+ALTER TABLE public.tasks ADD COLUMN user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE;
+ALTER TABLE public.tasks ALTER COLUMN user_id SET DEFAULT auth.uid();
+```
+
+Políticas de segurança aplicadas:
+- **SELECT:** `auth.uid() = user_id`
+- **INSERT:** `auth.uid() = user_id`
+- **UPDATE:** `auth.uid() = user_id`
+- **DELETE:** `auth.uid() = user_id`
